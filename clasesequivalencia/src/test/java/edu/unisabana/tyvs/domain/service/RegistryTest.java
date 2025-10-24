@@ -35,9 +35,11 @@ public class RegistryTest {
     @Test 
     public void shouldRejectIdDuplicated(){
         Registry registry = new Registry();
-        Person person = new Person("Francisco", 2, 76, Gender.MALE, true);
+        Person person1 = new Person("Javier", 2, 34, Gender.MALE, true);
+        Person person2 = new Person("Francisco", 2, 76, Gender.MALE, true);
 
-        RegisterResult result = registry.registerVoter(person);
+        registry.registerVoter(person1);
+        RegisterResult result = registry.registerVoter(person2);
 
         Assert.assertEquals(RegisterResult.DUPLICATED, result);
     }
