@@ -7,9 +7,13 @@ import edu.unisabana.tyvs.domain.model.RegisterResult;
 public class Registry {
 
     private ArrayList<Person> personsArray;
+    private int minAge;
+    private int maxAge;
 
     public Registry(){
         this.personsArray = new ArrayList<Person>();
+        this.minAge = 18;
+        this.maxAge = 120;
     }
 
     public RegisterResult registerVoter(Person p) {
@@ -19,28 +23,31 @@ public class Registry {
             return RegisterResult.INVALID;
         }
 
+        int age = p.getAge();
+        boolean alive = p.isAlive();
+        int id = p.getId();
+
         // Estado de Vida
-        if (!p.isAlive()){
+        if (!alive){
             return RegisterResult.DEAD;
         }
 
         // Identificador (Unicidad)
-        if (p.getId() <= 0){
+        if (id <= 0){
             return RegisterResult.INVALID;
         } 
 
-        // Verificación de Duplicados
         for (Person person : this.personsArray){
-            if (person.getId() == p.getId()){
+            // Verificación de Duplicados
+            if (person.getId() == id){
                 return RegisterResult.DUPLICATED;
             }
         }
 
-        
-        // Verificación de Edad
-        if (p.getAge() < 0 || p.getAge() > 120){
+        // Validación de Edad
+        if (age < 0 || age > this.maxAge){
             return RegisterResult.INVALID_AGE;
-        } else if (p.getAge() >= 0 && p.getAge() < 18){
+        } else if (age >= 0 && age < this.minAge){
             return RegisterResult.UNDERAGE;
         }
 

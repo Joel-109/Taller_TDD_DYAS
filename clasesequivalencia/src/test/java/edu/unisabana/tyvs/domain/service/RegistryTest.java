@@ -35,11 +35,11 @@ public class RegistryTest {
     @Test 
     public void shouldRejectIdDuplicated(){
         Registry registry = new Registry();
-        Person person1 = new Person("Javier", 2, 34, Gender.MALE, true);
-        Person person2 = new Person("Francisco", 2, 76, Gender.MALE, true);
+        Person original = new Person("Javier", 2, 34, Gender.MALE, true);
+        Person duplicated = new Person("Francisco", 2, 76, Gender.MALE, true);
 
-        registry.registerVoter(person1);
-        RegisterResult result = registry.registerVoter(person2);
+        registry.registerVoter(original);
+        RegisterResult result = registry.registerVoter(duplicated);
 
         Assert.assertEquals(RegisterResult.DUPLICATED, result);
     }
@@ -47,9 +47,9 @@ public class RegistryTest {
     @Test
     public void shouldRejectWhenPersonIsNull(){
         Registry registry = new Registry();
-        Person person = null;
+        Person nullPerson = null;
 
-        RegisterResult result = registry.registerVoter(person);
+        RegisterResult result = registry.registerVoter(nullPerson);
 
         Assert.assertEquals(RegisterResult.INVALID, result);
     }
@@ -57,9 +57,9 @@ public class RegistryTest {
     @Test
     public void shouldRejectWhenIdIsZeroOrNegative(){
         Registry registry = new Registry();
-        Person person = new Person("Carlos", 0, 25, Gender.MALE, true);
+        Person negativeIdPerson = new Person("Carlos", 0, 25, Gender.MALE, true);
 
-        RegisterResult result = registry.registerVoter(person);
+        RegisterResult result = registry.registerVoter(negativeIdPerson);
 
         Assert.assertEquals(RegisterResult.INVALID, result);
     }
@@ -67,9 +67,9 @@ public class RegistryTest {
     @Test
     public void shouldRejectUnderageAt17(){
         Registry registry = new Registry();
-        Person person = new Person("Joel", 3, 17, Gender.MALE, true);
+        Person underAgePerson = new Person("Joel", 3, 17, Gender.MALE, true);
 
-        RegisterResult result = registry.registerVoter(person);
+        RegisterResult result = registry.registerVoter(underAgePerson);
 
         Assert.assertEquals(RegisterResult.UNDERAGE, result);
     }
@@ -77,9 +77,9 @@ public class RegistryTest {
     @Test 
     public void shouldAcceptAdultAt18(){
         Registry registry = new Registry();
-        Person person = new Person("Michael", 4, 18, Gender.MALE, true);
+        Person minAgePerson = new Person("Michael", 4, 18, Gender.MALE, true);
 
-        RegisterResult result = registry.registerVoter(person);
+        RegisterResult result = registry.registerVoter(minAgePerson);
 
         Assert.assertEquals(RegisterResult.VALID, result);
     }
@@ -87,9 +87,9 @@ public class RegistryTest {
     @Test
     public void shouldAcceptMaxAge120(){
         Registry registry = new Registry();
-        Person person = new Person("Luisa", 5, 120,Gender.FEMALE, true);
+        Person maxAgePerson = new Person("Luisa", 5, 120,Gender.FEMALE, true);
 
-        RegisterResult result = registry.registerVoter(person);
+        RegisterResult result = registry.registerVoter(maxAgePerson);
 
         Assert.assertEquals(RegisterResult.VALID, result);
     }
@@ -97,9 +97,9 @@ public class RegistryTest {
     @Test
     public void shouldRejectInvalidAgeOver120(){
         Registry registry = new Registry();
-        Person person = new Person("Sara", 6, 121,Gender.FEMALE, true);
+        Person invalidAgePerson = new Person("Sara", 6, 121,Gender.FEMALE, true);
 
-        RegisterResult result = registry.registerVoter(person);
+        RegisterResult result = registry.registerVoter(invalidAgePerson);
 
         Assert.assertEquals(RegisterResult.INVALID_AGE, result);
     }
