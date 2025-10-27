@@ -1,4 +1,9 @@
-# Proyecto: Registro de Votantes (Clases de Equivalencia)
+# Proyecto: Registro de Votantes (Clases de Equivalencia)}
+
+**Integrantes**
+- Julian Pedraza
+- Camilo Otalora
+- Joel Alba
 
 ## Descripción del dominio:
 Este proyecto implementa un sistema básico de registro de votantes. El dominio está centrado en la clase Person, que representa a un ciudadano con los siguientes atributos:
