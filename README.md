@@ -1,627 +1,389 @@
-# Taller de TDD - Pruebas Unitarias
+# Proyecto: Registro de Votantes (Clases de Equivalencia)
 
-Este taller adapta el enfoque clásico de **TDD** (Red → Green → Refactor) a una **Arquitectura Limpia (Clean Architecture)**. El objetivo es que las **pruebas unitarias** garanticen la calidad del **dominio** sin acoplarse a frameworks o infraestructura.
+## Descripción del dominio:
+Este proyecto implementa un sistema básico de registro de votantes. El dominio está centrado en la clase Person, que representa a un ciudadano con los siguientes atributos:
 
----
+- **name:** nombre de la persona
 
-## 🎯 Objetivos del taller
+- **id:** número identificador único ```(no puede repetirse ni ser negativo o cero)```
 
-- Diseñar pruebas unitarias que ejerciten **reglas de negocio** (dominio) de forma **aislada**.  
-- Aplicar TDD: **primero la prueba**, luego la implementación mínima, y **refactor** continuo.  
-- Mantener **dependencias hacia adentro**: el dominio **no** conoce bases de datos, HTTP ni librerías externas.  
-- Escribir pruebas siguiendo el patrón **AAA (Arrange – Act – Assert)** para mejorar legibilidad y mantenibilidad.  
-- Definir **clases de equivalencia y valores límite** que permitan cubrir escenarios válidos, inválidos y bordes con un número mínimo de pruebas.  
-- Expresar pruebas con **BDD (Given–When–Then)** para alinear el código con el lenguaje de negocio y asegurar trazabilidad entre requisitos y validación.
+- **age:** edad ```(solo mayores de 18 y menores o iguales a 120 pueden registrarse)```
 
----
+- **gender:** género de la persona ```(MALE, FEMALE, UNDENTIFIED)```
 
-## 📑 Índice
+- **alive:** estado de vida (solo personas vivas pueden registrarse)
 
-- [Pruebas unitarias básicas](#pruebas-unitarias-básicas)
-- [Ejercicio](#ejercicio-registraduría)
-- [TDD (Red → Green → Refactor)](#tdd-paso-a-paso-red--green--refactor)
-- [Patrón AAA (Arrange – Act – Assert)](#patrón-aaa-arrange--act--assert)
-- [Ejecutar pruebas](#ejecutar-las-pruebas)
-- [Clases de equivalencia](#clases-de-equivalencia)
-- [Guía avanzada de Pruebas Unitarias](#guía-avanzada-de-pruebas-unitarias)
-- [Para entregar](#para-entregar)
-- [Resumen del Taller de TDD](#resumen-del-Taller-de-TDD)
-- [Recursos recomendados](#recursos-recomendados)
+El servicio principal Registry se encarga de aplicar las reglas del dominio y devolver un resultado de tipo RegisterResult.
 
----
+### Reglas validadas:
 
-## PRUEBAS UNITARIAS BÁSICAS
+1. **Nulidad:** No se permite registrar una persona nula.
 
----
+2. **Estado de vida:** Solo se pueden registrar personas vivas.
 
-### CREAR UN PROYECTO CON MAVEN
+3. **Identificador:**
 
-En el directorio de trabajo ejecutar el comando necesario para crear/generar un proyecto maven basado en un arquetipo:
+- El ID debe ser mayor que 0.
 
-```yml
-Grupo (groupId): edu.unisabana.tyvs
-Artefacto (artifactId): clasesequivalencia
-Paquete (package): edu.unisabana.tyvs.tdd
-archetypeArtifactId: maven-archetype-quickstart
+- No se permiten IDs duplicados.
+
+4. **Edad:**
+
+- Menores de 0 o mayores de 120 → ```INVALID_AGE.```
+
+- Menores de 18 → ```UNDERAGE.```
+
+- De 18 a 120 años → ```VALID.```
+
+## Instrucciones para compilar y ejecutar pruebas:
+
+1. Abre una terminal en la raíz del proyecto.
+
+2. Ejecuta los siguientes comandos Maven:
+
 ```
-
-🎓 Si necesitas más ayuda con la creación de proyectos en Maven, revisa el [**Taller de Nivelación**](https://github.com/CesarAVegaF312/DYAS-Taller_nivelacion).
-
----
-
-### ACTUALIZAR Y CREAR DEPENDENCIAS EN EL PROYECTO
-
-Busque en internet el repositorio central de ["maven"](https://mvnrepository.com/).
-
-Busque el artefacto JUnit y entre a la versión más nueva.
-
-![](img/repo.png)
-
-#### ⚠️ Nota importante 
-Ingresar directamente a ["2. Junit"](https://mvnrepository.com/artifact/junit/junit).  
-
-Ingrese a la pestaña de Maven y haga click en el texto de la dependencia para copiarlo al portapapeles.
-
-Edite el archivo `pom.xml` y realice las siguientes actualizaciones:
-- Agregue/Reemplace la dependencia copiada a la sección de dependencias.
-- Cambie la versión del compilador de Java a la versión 8 (o el de su computador), agregando la sección `properties` antes de la sección de dependencias:
-
----
-
-### Dependencias mínimas (`pom.xml`)
-
-```xml
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
-
-  <dependencies>
-    <!-- JUnit 4 -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.2</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.2.5</version>
-        <configuration>
-          <useModulePath>false</useModulePath>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-```
-
----
-
-### COMPILAR Y EJECUTAR
-Ejecute los comandos de Maven, 
-```bash
-mvn clean package
-```
-para compilar el proyecto y verificar que el proyecto se creó correctamente y los cambios realizados al archivo pom no generan inconvenientes.
-
-Ejecute el comando para ejecutar las pruebas unitarias de un proyecto desde Maven y ejecútelo sobre el proyecto.
-
-```bash
 mvn clean test
 ```
 
- Se debe ejecutar la clase `AppTest` con resultado exitoso.
+Este comando:
 
----
+* clean -> Limpia los archivos de compilación previos.
 
-## EJERCICIO “REGISTRADURÍA”
+* test -> Ejecuta todos los casos de prueba unitarios usando JUnit 4.13.2.
 
-Se va a crear un proyecto base siguiendo la estructura de **Arquitectura Limpia (Clean Architecture)** para un cliente en la registraduría, en el cual se registrarán personas con intención de votar para las próximas elecciones y se generarán los certificados electorales de aquellas personas cuyo voto sea válido.
-
-Se usará la clase *Person* que se describe más adelante. El servicio de la registraduría permitirá registrar personas que sean votantes.
-
-### REQUERIMIENTOS
-- Solo se registrarán votantes válidos.
-- Solo se permite una inscripción por número de documento.
-
----
-
-### HACER EL ESQUELETO DE LA APLICACION
-
----
-
-### Estructura propuesta (monomódulo por paquetes)
-
+Los resultados de ejecución y cobertura (si está habilitado JaCoCo) se generan en:
 ```
-src/
- ├─ main/java/edu/unisabana/tyvs/
- │   ├─ domain/
- │   │   ├─ model/              # Person, Gender, RegisterResult
- │   │   └─ service/            # Registry
- └─ test/java/edu/unisabana/tyvs/
-     ├─ domain/
-     │   └─ service/            # RegistryTest
+target/site/jacoco/index.html
 ```
 
-> También puedes llevar esto a **multi-módulo Maven** más estricto más adelante. Para TDD, esta versión por paquetes es suficiente y simple.
+### Desarrollo guiado por pruebas (TDD):
+El desarrollo de este proyecto siguió el ciclo TDD (Test Driven Development), que consiste en tres fases:
 
----
+**Red:** Primero se escribe una prueba unitaria que falla, ya que la funcionalidad aún no está implementada. Se aplicó al proyecto en el commit "RED", donde la función de `registerVoter(person)` retornaría como resultado un valor `null`, consiguiendo que el assert de cada prueba fallara. El commit mencionado contiene el RED de TDD para cada prueba unitaria desarrollada.
 
-#### Dominio: modelos
+**Green:** Luego se implementa la lógica mínima necesaria en el código de producción (Registry) para que la prueba pase. En este sentido, el commit "GREEN" contiene el desarrollo básico de la función `registerVoter(person)`, de modo que cumpliera con cada prueba unitaria definida.
 
-Cree el archivo `RegisterResult.java` en el directorio `edu.unisabana.tyvs.domain.model` con la enumeración:
+**Refactor:** Finalmente se refactoriza el código, manteniendo las pruebas en verde y mejorando la legibilidad y estructura. De esta manera, el commit "REFACTOR" posee la lógica limpia y optimizada, que permite pasar las pruebas unitarias desarrolladas.
 
-```java
-package edu.unisabana.tyvs.domain.model;
-public enum RegisterResult { VALID, DUPLICATED, INVALID }
-```
+Los resultados de cada etapa se exponen en el apartado de **Anexos**.
 
-Cree el archivo `Gender.java` en el paquete `edu.unisabana.tyvs.domain.model` con la enumeración:
+Conforme a lo anterior, algunas de las pruebas unitarias desarrolladas están en torno a los siguientes aspectos:
 
-```java
-package edu.unisabana.tyvs.domain.model;
-public enum Gender { MALE, FEMALE, UNIDENTIFIED }
-```
+* Verificación de nulidad.
 
-Cree el archivo `Person.java` en el paquete `edu.unisabana.tyvs.domain.model` con el siguiente contenido:
+* Estado de vida.
 
-```java
-package edu.unisabana.tyvs.domain.model;
+* Validación de ID.
 
-public class Person {
-    private final String name;
-    private final int id;
-    private final int age;
-    private final Gender gender;
-    private final boolean alive;
+* Reglas de edad.
 
-    public Person(String name, int id, int age, Gender gender, boolean alive) {
-        this.name = name; this.id = id; this.age = age; this.gender = gender; this.alive = alive;
-    }
-    public String getName() { return name; }
-    public int getId() { return id; }
-    public int getAge() { return age; }
-    public Gender getGender() { return gender; }
-    public boolean isAlive() { return alive; }
-}
-```
+* Detección de duplicados.
 
----
+### Patrón AAA (Arrange – Act – Assert):
+Cada prueba unitaria sigue la estructura AAA, que mejora la claridad y separación de responsabilidades en los tests:
 
-#### Dominio: caso de uso (Servicio)
+**Arrange:** Se preparan los objetos y datos de prueba ```(por ejemplo, Registry registry = new Registry())```.
 
-Cree el archivo `Registry.java` en el directorio `edu.unisabana.tyvs.domain.service` con el método `registerVoter`:
+**Act:** Se ejecuta la acción que se desea probar ```(por ejemplo, RegisterResult result = registry.registerVoter(person))```.
 
-```java
-package edu.unisabana.tyvs.domain.service;
+**Assert:** Se verifica el resultado esperado ```(por ejemplo, Assert.assertEquals(RegisterResult.VALID, result))```.
 
-import edu.unisabana.tyvs.domain.model.*;
+### Dependencias principales:
 
-public class Registry {
+* JUnit 4.13.2 – Framework de pruebas unitarias.
 
-    public RegisterResult registerVoter(Person p) {
-        // TODO Validate person and return real result.
-        return RegisterResult.VALID;
-    }
-}
-```
+* JaCoCo 0.8.12 – Generación de reportes de cobertura de código.
 
----
+* Maven Surefire 3.2.5 – Ejecutor de pruebas.
 
-## TDD Paso a Paso (Red → Green → Refactor)
+### Pruebas unitarias
 
-El ciclo TDD: Red → Green → Refactor es la práctica central de Desarrollo Guiado por Pruebas (Test-Driven Development) y consiste en tres pasos cortos y repetitivos:
+Las pruebas unitarias fueron diseñadas bajo el enfoque de Clases de Equivalencia y Escenarios BDD, asegurando que cada regla del dominio estuviera validada por al menos una prueba. Todas las pruebas se escribieron utilizando el patrón AAA (Arrange – Act – Assert) para mantener claridad y consistencia.
 
-### 1. RED (Rojo)
-- Escribes una prueba unitaria nueva que describe el comportamiento que deseas.
-- Como aún no has implementado el código (o la lógica está incompleta), la prueba falla.
+**Clases de Equivalencia**
 
-### 2. GREEN (Verde)
-- Escribes la implementación mínima para que la prueba pase.
-- No importa si el código no es elegante todavía, lo importante es que sea funcional.
+| Caso de Prueba | Entrada | Resultado Esperado | Escenario BDD |
+|----------------|---------|-------------------|--------------|
+| **Persona válida** | `Person("Ana", 1, 30, FEMALE, true)` | **VALID** | Dado que la persona es mayor de edad, tiene ID válido y está viva, cuando se registra, entonces el resultado debe ser VALID. |
+| **Persona muerta** | `Person("Carlos", 2, 40, MALE, false)` | **DEAD** | Dado que la persona está muerta, cuando se intenta registrar, entonces el sistema debe rechazarla con resultado DEAD. |
+| **Persona con ID duplicado** | `Person("Javier", 2, 34, MALE, true)` y `Person("Francisco", 2, 76, MALE, true)` | **DUPLICATED** | Dado que ya existe una persona registrada con el mismo ID, cuando se intenta registrar otra con ese mismo ID, entonces el sistema debe devolver DUPLICATED. |
+| **Persona nula** | `null` | **INVALID** | Dado que la persona no existe (es null), cuando se intenta registrar, entonces el sistema debe devolver INVALID. |
+| **Persona con ID inválido** | `Person("Carlos", 0, 25, MALE, true)` | **INVALID** | Dado que el ID no es mayor que 0, cuando se intenta registrar, entonces el sistema debe devolver INVALID. |
+| **Persona menor de edad** | `Person("Joel", 3, 17, MALE, true)` | **UNDERAGE** | Dado que la persona tiene menos de 18 años, cuando se intenta registrar, entonces el sistema debe devolver UNDERAGE. |
+| **Persona en límite inferior de edad** | `Person("Michael", 4, 18, MALE, true)` | **VALID** | Dado que la persona tiene exactamente 18 años, cuando se registra, entonces el resultado debe ser VALID. |
+| **Persona en límite superior de edad** | `Person("Luisa", 5, 120, FEMALE, true)` | **VALID** | Dado que la persona tiene la edad máxima permitida (120 años), cuando se registra, entonces el sistema debe devolver VALID. |
+| **Persona con edad inválida** | `Person("Sara", 6, 121, FEMALE, true)` | **INVALID_AGE** | Dado que la persona supera el límite máximo de edad permitido, cuando se intenta registrar, entonces el sistema debe devolver INVALID_AGE. |
 
-### 3. REFACTOR (Refactorizar)
-- Una vez todas las pruebas están en verde, mejoras el código:
-  - Limpias duplicación.
-  - Renombras variables o métodos.
-  - Ordenas condiciones.
-  - Extraes constantes.
-- Lo clave: no rompes pruebas existentes.
+### Aplicación del patrón AAA (Arrange - Act- Assert)
 
-Todos los archivos relacionados específicamente con los temas de pruebas deben ir bajo la carpeta `test`.
+Todas las pruebas en la clase RegistryTest se desarrollaron bajo este patrón:
 
-Adicional a esta practica de creacion de pruebas vamos a seguir el diseño de pruebas patrón **AAA (Arrange – Act – Assert)**
+* Arrange: Se crean los objetos de prueba, por ejemplo, Registry registry = new Registry(); Person person = new Person(...);
 
-## Patrón AAA (Arrange – Act – Assert)
+* Act: Se ejecuta la acción que se desea probar, por ejemplo, RegisterResult result = registry.registerVoter(person);
 
-En el diseño de pruebas unitarias se recomienda estructurar cada método de prueba siguiendo el patrón AAA:
+* Assert: Se verifica que el resultado sea el esperado, por ejemplo, Assert.assertEquals(RegisterResult.VALID, result);
 
-### Arrange (Preparar)
-- Se configuran los datos, objetos y estado inicial necesarios para la prueba.
-
-### Act (Actuar)
-- Se ejecuta la acción que queremos probar.
-
-### Assert (Afirmar)
-- Se verifican los resultados obtenidos frente a lo esperado.
-
-#### ⚠️ Nota importante
-
-✅ Este patrón mejora la legibilidad y mantenibilidad de las pruebas porque:
-
-- Hace evidente qué se está preparando, qué se está probando y qué se está validando.
-- Facilita que otros desarrolladores entiendan rápidamente el propósito de cada prueba.
-- Evita que las pruebas se conviertan en “cajas negras” difíciles de interpretar.
-
-Empecemos ...
-
----
-
-## EJECUTAR LAS PRUEBAS
-
----
-
-### 1. RED: primera prueba (camino feliz)
-
-Bajo la carpeta de pruebas, cree la clase `RegistryTest.java` en el directorio `edu.unisabana.tyvs.domain.service`:
-
-```java
-package edu.unisabana.tyvs.domain.service;
-
-import edu.unisabana.tyvs.domain.model.*;
-import org.junit.Assert;
-import org.junit.Test;
-
-public class RegistryTest {
-
-    @Test
-    public void shouldRegisterValidPerson() {
-        // Arrange: preparar los datos y el objeto a probar
-        Registry registry = new Registry();
-        Person person = new Person("Ana", 1, 30, Gender.FEMALE, true);
-
-        // Act: ejecutar la acción que queremos probar
-        RegisterResult result = registry.registerVoter(person);
-
-        // Assert: verificar el resultado esperado
-        Assert.assertEquals(RegisterResult.VALID, result);
-    }
-}
-
+Ejemplo práctico:
 
 ```
-
-### 2. GREEN: implementación mínima
-Ya devuelve `VALID`, la prueba pasa.
-
----
-
-#### ⚠️ Nota importante sobre ubicación del `pom.xml`
-
-Recuerde ejecutar todos los comandos Maven desde la carpeta **raíz del proyecto**, donde se encuentra el archivo `pom.xml`.
-
----
-
-Para correr las pruebas utilice:
-```sh
-mvn clean compile
+@Test
+public void shouldRegisterValidPerson() {
+```
+```
+// Arrange
+Registry registry = new Registry();
+Person person = new Person("Ana", 1, 30, Gender.FEMALE, true);
+```
+```
+// Act
+RegisterResult result = registry.registerVoter(person);
 ```
 
-También puede utilizar:
-```sh
+```
+// Assert
+Assert.assertEquals(RegisterResult.VALID, result);
+```
+
+## Nomenclatura de métodos y estructura de pruebas
+
+Todas las pruebas unitarias siguen una nomenclatura descriptiva y clara, basada en el formato should[Acción][Condición], lo que permite entender rápidamente el comportamiento esperado sin necesidad de leer la implementación.
+
+**Ejemplos de métodos**
+
+* shouldRegisterValidPerson()
+
+* shouldRejectDeadPerson()
+
+* shouldRejectIdDuplicated()
+
+* shouldRejectWhenPersonIsNull()
+
+* shouldRejectWhenIdIsZeroOrNegative()
+
+* shouldRejectUnderageAt17()
+
+* shouldAcceptAdultAt18()
+
+* shouldAcceptMaxAge120()
+
+* shouldRejectInvalidAgeOver120()
+
+Cada método contiene un único assert principal, o varios únicamente si verifican la misma intención lógica (por ejemplo, asegurar que un mismo comportamiento se mantiene ante distintas entradas).
+Esto garantiza claridad, legibilidad y trazabilidad en la relación entre pruebas y reglas de negocio.
+
+# Cobertura de código (JaCoCo)
+
+Se utilizó el plugin JaCoCo integrado en Maven para medir la cobertura de las pruebas.
+El reporte se genera automáticamente al ejecutar el comando:
+
+```
 mvn clean test
 ```
-
----
-
-Revise cuál es la diferencia.  
-Tip: [Maven Lifecycle Phases](https://www.devopsschool.com/blog/maven-tutorials-maven-lifecycle-phases-goal).
-
----
-
-Pero hagamos otra prueba ...
-
----
-
-### 1. RED: persona muerta → DEAD
-
-```java
-
-    @Test
-    public void shouldRejectDeadPerson() {
-        // Arrange: preparar los datos y el objeto a probar
-        Registry registry = new Registry();
-        Person dead = new Person("Carlos", 2, 40, Gender.MALE, false);
-
-        // Act: ejecutar la acción que queremos probar
-        RegisterResult result = registry.registerVoter(dead);
-
-        // Assert: verificar el resultado esperado
-        Assert.assertEquals(RegisterResult.DEAD, result);
-    }
+El reporte HTML se encuentra en la ruta:
 
 ```
+target/site/jacoco/index.html
+```
+**Resultados obtenidos:**
 
-### 2. GREEN: implementación mínima
-Agregue este código a su clase `Registry.java` para ir complementando y haciendo mas robusta su clase.
 
-```java
+![Jacoco](https://github.com/Joel-109/Taller_TDD_DYAS/blob/main/img/JACOCO-REPORT.png)
+**Resumen general**
 
-if (!p.isAlive()) return RegisterResult.DEAD;
+Tipo de cobertura | Total cubierto | Total faltante | Porcentaje
+-- | -- | -- | --
+Instrucciones (líneas de código ejecutadas) | 162 de 176 | 14 no ejecutadas | 92 %
+Ramas de decisión (if / else) | 15 de 18 | 3 no ejecutadas | 83 %
+Métodos cubiertos | 11 de 12 | 1 sin probar | 92 %
+Clases cubiertas | 4 de 5 | 1 sin probar | 80 %
+
+**Análisis por paquete**
+
+Paquete | Cobertura de instrucciones | Cobertura de ramas | Comentario
+-- | -- | -- | --
+edu.unisabana.tyvs | 0 % | N/A | Es el paquete raíz del proyecto, sin lógica implementada, por eso no muestra cobertura.
+edu.unisabana.tyvs.domain.model | 93 % | N/A | Muy buena cobertura en las clases del modelo (Person, Gender, RegisterResult). Solo faltan algunos métodos simples como getters.
+edu.unisabana.tyvs.domain.service | 98 % | 83 % | Excelente cobertura del servicio Registry. Solo faltan unas pocas ramas poco comunes, como edad negativa o valores no probados.
+
+
+Como podemos observar la cobertura global obtenida fue de 92 % de líneas y 83 % de ramas, lo que se considera muy alto tanto a nivel académico como profesional.
+Esto significa que las pruebas implementadas verifican prácticamente todos los caminos y condiciones posibles dentro de la clase Registry.
+
+Los pocos casos no cubiertos se deben a condiciones límite que no se probaron, como una persona con edad negativa o escenarios extremos de validación.
+Estos casos no afectan la funcionalidad principal, pero podrían incluirse en el futuro para lograr un 100 % de cobertura. Aun así el nivel de cobertura alcanzado demuestra que las pruebas unitarias cumplen su propósito y que la implementación tiene una alta calidad y fiabilidad.
+
+
+### Evidencia de TDD
+
+El desarrollo de la clase ```Registry``` se realizó siguiendo el enfoque TDD (Test-Driven Development), aplicando el ciclo iterativo Rojo → Verde → Refactor en cada regla de negocio implementada.
+
+A continuación, se describe la historia del desarrollo con al menos tres iteraciones representativas:
+
+### Iteración 1: Validación de persona nula
+
+* **Rojo (RED):**
+Se escribió la prueba ```shouldRejectWhenPersonIsNull()```, la cual falló porque el método ```registerVoter()``` no manejaba el caso de un objeto ```Person``` nulo (resultado obtenido: ```null```).
+
+* **Verde (GREEN):**
+Se implementó la validación inicial dentro de ```registerVoter()```:
 
 ```
+if (p == null) {
+    return RegisterResult.INVALID;
+}
+```
+Al ejecutar ```mvn clean test```, todas las pruebas existentes pasaron correctamente.
 
-### 3. Refactor
-Refactorizando el código.
+* **Refactor (REFACTOR):**
+Se mantuvo el código limpio, sin duplicación, y se ajustaron los comentarios y nombres de variables para mayor claridad.
 
-```java
-package edu.unisabana.tyvs.domain.service;
+### Iteración 2: Validación de estado de vida (persona muerta)
 
-import edu.unisabana.tyvs.domain.model.Person;
-import edu.unisabana.tyvs.domain.model.RegisterResult;
+* Rojo (RED):
+Se agregó la prueba ```shouldRejectDeadPerson()```.
+El test falló con salida esperada ```<DEAD>``` pero obtenida ```<null>```.
 
-public class Registry {
+* Verde (GREEN):
+Se añadió la condición correspondiente:
+```
+if (!p.isAlive()) {
+    return RegisterResult.DEAD;
+}
+```
+* Refactor (REFACTOR):
+Se reutilizaron las variables locales ```alive```, ```age```, ```id``` para reducir llamadas repetidas a los getters y mejorar legibilidad.
 
-    public RegisterResult registerVoter(Person p) {
-        if (p == null) {
-            return RegisterResult.INVALID; // regla defensiva
-        }
-        if (!p.isAlive()) {
-            return RegisterResult.DEAD;
-        }
-        // implementación mínima para pasar las pruebas actuales
-        return RegisterResult.VALID;
+### Iteración 3: Validación de duplicados e identificación
+
+* Rojo (RED):
+Se creó el test ```shouldRejectIdDuplicated()```, que falló inicialmente porque ```registerVoter()``` no verificaba duplicidad.
+
+* Verde (GREEN):
+Se agregó un bucle para recorrer la lista de personas registradas:
+
+```
+for (Person person : this.personsArray) {
+    if (person.getId() == p.getId()) {
+        return RegisterResult.DUPLICATED;
     }
 }
 ```
-y
+La prueba pasó exitosamente junto con las anteriores.
 
-```java
-package edu.unisabana.tyvs.domain.model;
+* Refactor (REFACTOR):
+Se extrajeron constantes ```minAge``` y ```maxAge```, y se ordenaron las validaciones para mantener coherencia de lectura.
 
-public enum RegisterResult {
-    VALID, DUPLICATED, INVALID, DEAD
+### Iteración 4 (adicional): Validaciones de edad
+
+* Rojo (RED):
+Los tests ```shouldRejectUnderageAt17()``` y ```shouldRejectInvalidAgeOver120()``` fallaban con valores esperados ```<UNDERAGE>``` y ```<INVALID_AGE>```.
+
+* Verde (GREEN):
+Se implementaron las reglas de límite de edad:
+
+```
+if (age < 0 || age > this.maxAge) {
+    return RegisterResult.INVALID_AGE;
+} else if (age >= 0 && age < this.minAge) {
+    return RegisterResult.UNDERAGE;
 }
 ```
 
-Ejecutar y validar nuevamente el resultado.
+Ambos tests pasaron.
 
----
+* Refactor (REFACTOR):
+Se reorganizó el método y se añadieron comentarios explicativos mínimos.
 
-## CLASES DE EQUIVALENCIA
+## Resumen del ciclo TDD aplicado
 
-Antes de escribir pruebas conviene particionar el dominio de entrada en clases de [equivalencia](https://prezi.com/view/LyUYlz5nx2UmnKVMgSve/?referral_token=inUc7klnB3FN): grupos de valores que el sistema trata de la misma forma. Probar un representante por clase suele ser suficiente, y se refuerza con valores límite (los bordes entre clases), donde suelen aparecer errores. Piense en los casos de equivalencia que se pueden generar del ejercicio para la registraduría dadas las condiciones.
+Cada cambio en el código siguió el patrón:
 
-Para `registerVoter(Person)` el espacio de entradas se define por los atributos del dominio (Definición de datos):
+1. Rojo: Crear o ejecutar una prueba que falla.
 
-- Edad
-  - Clase inválida: `edad < 0` → `INVALID_AGE` (límite: `-1`, borde inferior).
-  - Clase “menor”: `0 ≤ edad < 18` → `UNDERAGE` (límites: `17` y `18`).
-  - Clase válida: `18 ≤ edad ≤ 120` → contribuye a `VALID` si demás reglas pasan (límites: `18`, `120`).
-  - Clase inválida: `edad > 120` → `INVALID_AGE` (límite: `121`).
+2. Verde: Implementar el código mínimo necesario para que la prueba pase.
 
-- Estado de vida 
-  - `alive = false` → `DEAD` (independiente de la edad).
-  - `alive = true` → continúa evaluación de edad/duplicados.
+3. Refactor: Limpiar, extraer constantes y mejorar la legibilidad sin romper las pruebas.
 
-- Identificador (unicidad)
-  - Clase inválida de formato (opcional según tu enum): `id ≤ 0` → `INVALID`/`INVALID_ID`.
-  - Clase “duplicado”: mismo `id` ya registrado → `DUPLICATED`.
-  - Clase “único”: `id` no registrado → continúa evaluación.
+### Matriz de pruebas:
 
-- Nulidad
-  - `person == null` → `INVALID` (validación defensiva).
+| Clase de equivalencia                      | Valores límite / Condición                              | Entrada (Person)                                                                         | Resultado esperado           | Test que lo cubre (`@Test` método)            |
+| ------------------------------------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------------- | --------------------------------------------- |
+| Persona válida (adulto)                    | `18 <= edad <= 120`, `id > 0`, `alive = true`, id único | `Person("Ana", 1, 30, Gender.FEMALE, true)`                                              | `RegisterResult.VALID`       | `shouldRegisterValidPerson`                   |
+| Persona muerta                             | `alive = false`                                         | `Person("Carlos", 2, 40, Gender.MALE, false)`                                            | `RegisterResult.DEAD`        | `shouldRejectDeadPerson`                      |
+| ID duplicado                               | `id` ya registrado en `Registry`                        | registro previo: `Person("Javier", 2, 34, ...)`, luego `Person("Francisco", 2, 76, ...)` | `RegisterResult.DUPLICATED`  | `shouldRejectIdDuplicated`                    |
+| Persona nula                               | `person == null`                                        | `null`                                                                                   | `RegisterResult.INVALID`     | `shouldRejectWhenPersonIsNull`                |
+| ID inválido                                | `id <= 0` (ej. `0`, `-5`)                               | `Person("Carlos", 0, 25, Gender.MALE, true)`                                             | `RegisterResult.INVALID`     | `shouldRejectWhenIdIsZeroOrNegative`          |
+| Persona menor de edad                      | `edad < 18` (ej. `17`)                                  | `Person("Joel", 3, 17, Gender.MALE, true)`                                               | `RegisterResult.UNDERAGE`    | `shouldRejectUnderageAt17`                    |
+| Límite inferior (edad mínima válida)       | `edad = 18`                                             | `Person("Michael", 4, 18, Gender.MALE, true)`                                            | `RegisterResult.VALID`       | `shouldAcceptAdultAt18`                       |
+| Límite superior (edad máxima válida)       | `edad = 120`                                            | `Person("Luisa", 5, 120, Gender.FEMALE, true)`                                           | `RegisterResult.VALID`       | `shouldAcceptMaxAge120`                       |
+| Edad inválida (sobre el máximo)            | `edad > 120` (ej. `121`)                                | `Person("Sara", 6, 121, Gender.FEMALE, true)`                                            | `RegisterResult.INVALID_AGE` | `shouldRejectInvalidAgeOver120`               |
 
----
+### Calidad del código
 
-# Guía avanzada de Pruebas Unitarias
+#### Constantes extraídas
 
-Las pruebas unitarias son la base de un plan de pruebas exhaustivo. Para alinearnos con las buenas prácticas internacionales y los resultados de aprendizaje del curso, además de implementar las pruebas básicas, se deben considerar los siguientes aspectos:
+El programa maneja correctamente los valores fijos relacionados con la edad mínima y máxima para registrarse como votante (18 y 120). Estos valores están definidos dentro de la clase Registry, lo que permite mantener la coherencia del sistema y facilita hacer cambios si en el futuro las reglas cambian.
+Aunque no están declarados como constantes (final), su uso es estable y no cambia durante la ejecución, por lo que funcionan efectivamente como tales. Además, los límites están probados en los tests (con personas de 17, 18, 120 y 121 años), lo cual garantiza que el comportamiento sea correcto en los valores frontera.
 
----
+#### Sin código muerto ni duplicado
 
-## 1. Planificación de las pruebas
-Define una **matriz de clases de equivalencia y valores límite** para `registerVoter`. 
+En el código no hay fragmentos innecesarios ni duplicaciones.
+Cada clase tiene un propósito claro:
 
-Ejemplo:
+* Person solo guarda los datos del votante.
 
-| Caso | Entrada | Resultado esperado |
-|------|---------|---------------------|
-| Persona viva, edad 30, id único | (edad=30, vivo=true, id=1) | VALID |
-| Persona muerta | (edad=45, vivo=false) | DEAD |
-| Edad 17 | (edad=17, vivo=true) | UNDERAGE |
-| Edad -1 | (edad=-1, vivo=true) | INVALID_AGE |
-| Persona duplicada | (edad=25, id=777 dos veces) | DUPLICATED |
+* Registry contiene la lógica principal de registro y validación.
 
----
+* Los tests en RegistryTest prueban cada caso específico, sin repetir pasos o datos innecesarios.
 
-## 2. Cobertura de código
+Esto demuestra una buena organización y separación de responsabilidades, algo importante para mantener el código limpio y fácil de modificar.
 
-Agrega **JaCoCo** para medir cobertura.  
-Este plugin debe incluirse dentro de la sección `<build><plugins> ... </plugins></build>` del archivo `pom.xml`.
+#### Comentarios mínimos y nombres claros
 
-```xml
-    <!-- (Opcional pero recomendado) JaCoCo para cobertura -->
-    <build>
-      <plugins>
-        <plugin>
-          <groupId>org.jacoco</groupId>
-          <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.12</version>
-          <executions>
-            <execution>
-              <id>prepare-agent</id>
-              <goals>
-                <goal>prepare-agent</goal>
-              </goals>
-            </execution>
-            <execution>
-              <id>report</id>
-              <phase>verify</phase>
-              <goals>
-                <goal>report</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </build>
-```
+Los comentarios se usan solo donde son útiles, sobre todo en los tests, donde explican de manera corta qué se está probando (Arrange, Act, Assert).
+El resto del código no necesita muchos comentarios porque los nombres son autoexplicativos: métodos como isAlive, registerVoter o shouldRejectUnderageAt17 ya dejan claro lo que hacen. Gracias a esto, el código se entiende rápido y no hay que leer comentarios extensos para saber qué pasa.
 
-Ejecuta:
+### Reflexión sobre las pruebas y posibles mejoras
 
-```sh
-mvn clean test
-mvn jacoco:report
-```
+### Escenarios no cubiertos
 
-Revisa el archivo `target/site/jacoco/index.html`.
+Aunque los tests cubren muchos casos importantes, hay algunos escenarios que no se probaron y podrían servir para fortalecer el sistema:
 
----
+1. Edad igual a 0 o negativa: sería útil probar qué pasa con edades como 0 o -5, además del caso actual.
 
-## 3. Robustez de las pruebas
-La escritura de pruebas con **BDD (Behavior-Driven Development)** busca que los casos de prueba se expresen en un lenguaje cercano al negocio, entendible tanto para desarrolladores como para usuarios y analistas. A diferencia de las pruebas unitarias tradicionales, que se centran en métodos o clases, en BDD se describe el **comportamiento esperado del sistema** usando una narrativa estructurada en términos de Given–When–Then (Dado–Cuando–Entonces). Esto facilita la comunicación entre los diferentes actores de un proyecto, asegura que las pruebas estén alineadas con los requisitos funcionales y promueve que el código se construya a partir de la especificación del comportamiento deseado. En el marco de esta asignatura, BDD aporta claridad al proceso de validación, ya que conecta directamente las reglas de negocio con la verificación automatizada, fortaleciendo la robustez y la trazabilidad de las pruebas.
+2. IDs muy grandes o fuera de rango: no se prueba qué sucede con identificadores extremadamente altos.
 
-Ejemplo:
+3. Casos combinados: por ejemplo, una persona muerta y menor de edad, o un ID duplicado con edad inválida. Esto ayudaría a comprobar que el sistema prioriza correctamente las validaciones.
 
-```gherkin
-Escenario: Rechazar persona menor de edad
-  Dado (Given) que existe una persona viva de 17 años
-  Cuando (When) intento registrarla
-  Entonces (Then) el resultado debe ser UNDERAGE
-```
+4. Registros simultáneos: no se evalúa cómo se comporta el sistema si varias personas se registran al mismo tiempo (algo más relevante en un contexto real o multiusuario).
 
----
+#### Defectos detectados por los tests
 
-## 4. Clases de equivalencia y escenarios BDD
+Los tests no encontraron errores reales en el código: todos los casos dieron los resultados esperados.
+El método registerVoter funciona bien al identificar personas muertas, duplicadas o con edades fuera del rango permitido.
+También reconoce correctamente los casos válidos en los límites (18 y 120 años).
+Esto muestra que la lógica actual es consistente y cubre las reglas principales sin comportamientos inesperados.
 
-La siguiente tabla combina los nombres de los tests unitarios (estilo técnico en JUnit) con su respectiva especificación en **BDD (Given–When–Then)**, de manera que se mantenga trazabilidad entre las reglas de negocio y las pruebas.
+#### Cómo se podría mejorar la clase Registry?
 
-| Nombre del test (JUnit) | Escenario BDD (Given–When–Then) |
-|--------------------------|----------------------------------|
-| **shouldReturnInvalidWhenPersonIsNull** | **Given** la persona es `null` <br> **When** intento registrarla <br> **Then** el resultado debe ser `INVALID` |
-| **shouldRejectWhenIdIsZeroOrNegative** | **Given** la persona tiene `id = 0` (o `id = -5`), edad 25 y está viva <br> **When** intento registrarla <br> **Then** el resultado debe ser `INVALID` |
-| **shouldRejectUnderageAt17** | **Given** la persona tiene 17 años, está viva y su id es válido <br> **When** intento registrarla <br> **Then** el resultado debe ser `UNDERAGE` |
-| **shouldAcceptAdultAt18** | **Given** la persona tiene 18 años, está viva y su id es válido <br> **When** intento registrarla <br> **Then** el resultado debe ser `VALID` |
-| **shouldAcceptMaxAge120** | **Given** la persona tiene 120 años, está viva y su id es válido <br> **When** intento registrarla <br> **Then** el resultado debe ser `VALID` |
-| **shouldRejectInvalidAgeOver120** | **Given** la persona tiene 121 años, está viva y su id es válido <br> **When** intento registrarla <br> **Then** el resultado debe ser `INVALID_AGE` |
+Aunque el código funciona correctamente, se podrían hacer algunos ajustes para facilitar las pruebas y el mantenimiento:
 
-> **Regla**: todas las pruebas unitarias se enfocan en **dominio**.
+* Configurar edades por parámetro: permitir pasar la edad mínima y máxima por el constructor ayudaría a probar otros rangos fácilmente sin modificar el código.
 
----
+* Separar la validación: mover las validaciones a una clase o método aparte (por ejemplo, AgeValidator) haría que el código fuera más fácil de probar por partes.
 
-## 4. Gestión de defectos
-Crea un archivo `defectos.md` para documentar fallos:
+* Usar estructuras más adecuadas: en lugar de ArrayList, se podría usar un Set para evitar duplicados automáticamente.
 
-```
-### Defecto 01
-- Caso: edad -1
-- Esperado: INVALID_AGE
-- Obtenido: VALID
-- Causa probable: falta de validación en límites
-- Estado: Abierto
-```
+# Anexos
 
----
-
-## 5. Automatización e integración (Opcional)
-- Ejecuta las pruebas unitarias en cada commit con CI (GitHub Actions, Jenkins, GitLab CI).  
-- Rechaza merges si `mvn test` falla.
-
----
-
-## PARA ENTREGAR
-
-- Repositorio Git con el proyecto y la URL de entrega.
-- Archivo `.gitignore` (excluir `target`, archivos del IDE, etc.).
-- Integrantes (archivo integrantes.txt o sección en el README).
-- README con:
-  - Instrucciones para compilar y correr pruebas (mvn clean test).
-  - Descripción breve del dominio y reglas validadas.
-  - Breve explicación de **TDD (Red → Green → Refactor)** y **AAA** aplicada en el proyecto.
-- Pruebas unitarias:
-  - ≥ 5 Clases de equivalencia y escenarios BDD.
-  - Todas las pruebas escritas con **AAA (Arrange–Act–Assert)**.
-- Nomenclatura clara de métodos (`should…`), y un solo assert principal por test (o varios con misma intención).
-- Cobertura:
-  - Reporte **JaCoCo** adjunto (carpeta `target/site/jacoco/` o captura).
-  - ≥ 80% de cobertura global y ≥ 80% en el paquete …tdd.registry (si aplica).
-- Evidencia de TDD:
-  - Breve sección **“Historia TDD”** en el README indicando al menos 3 iteraciones: prueba nueva (Rojo) → cambio mínimo (Verde) → refactor (mantener Verde).
-  - Opcional: capturas o mensajes de commit que reflejen el ciclo (e.g., `test: add dead person rule (RED)`, `feat: minimal check alive (GREEN)`, `refactor: extract constants (REFACTOR)`).
-- Matriz de pruebas:
-  - Tabla con **clases de equivalencia** y **valores límite**: entradas, resultado esperado y test que lo cubre (nombre del método).
-- Gestión de defectos:
-  - Archivo `defectos.md` con al menos **1 defecto** real encontrado o simulado: caso, esperado vs. obtenido, causa probable, estado (Abierto/Cerrado).
-- Calidad del código:
-  - Constantes extraídas (p. ej., `MIN_AGE`, `MAX_AGE`).
-  - Sin **“código muerto”**, sin duplicación evidente en pruebas o producción.
-  - Comentarios mínimos y expresivos; preferir nombres autoexplicativos.
-- Ejecución reproducible:
-  - Proyecto Maven ejecutable con `mvn clean test` sin pasos manuales adicionales.
-
-- Reflexiona sobre:
-  - ¿Qué escenarios no se cubrieron?
-  - ¿Qué defectos reales detectaron los tests?
-  - ¿Cómo mejorarías la clase `Registry` para facilitar su prueba?
-
----
-
-# Resumen del Taller de TDD
-
-En este taller aplicamos distintas estrategias de **pruebas unitarias** que permiten desarrollar software más confiable, claro y alineado con las reglas de negocio.  
-
----
-
-## 🔴🟢🔵 TDD (Test-Driven Development)
-
-- **Qué es:** ciclo de desarrollo *Red → Green → Refactor* en el que primero se escribe una prueba que falla, luego se implementa el código mínimo para que pase y finalmente se refactoriza.  
-- **Para qué sirve:** garantiza que el código se construya guiado por pruebas desde el inicio, evitando errores tempranos y facilitando el diseño incremental.  
-
----
-
-## 🧩 Patrón AAA (Arrange – Act – Assert)
-
-- **Qué es:** forma de estructurar cada prueba en tres pasos:  
-  - **Arrange:** preparar los datos y objetos necesarios.  
-  - **Act:** ejecutar el método o acción bajo prueba.  
-  - **Assert:** verificar que el resultado sea el esperado.  
-- **Para qué sirve:** hace que las pruebas sean más legibles, claras y fáciles de mantener, al separar explícitamente la preparación, la acción y la verificación.  
-
----
-
-## 🧮 Clases de Equivalencia y Valores Límite
-
-- **Qué es:** técnica de diseño de pruebas que agrupa las entradas posibles en clases que se comportan de la misma forma, y selecciona valores representativos (incluyendo bordes).  
-- **Para qué sirve:** reduce la cantidad de pruebas necesarias sin perder cobertura lógica, asegurando que se validen casos normales, inválidos y extremos donde suelen ocurrir errores.  
-
----
-
-## 🤝 BDD (Behavior Driven Development)
-
-- **Qué es:** forma de expresar pruebas en un lenguaje cercano al negocio usando narrativa **Given – When – Then (Dado – Cuando – Entonces)**.  
-- **Para qué sirve:** conecta las reglas de negocio con la validación automatizada, facilitando la comunicación entre desarrolladores, analistas y usuarios, y asegurando que las pruebas reflejen el comportamiento esperado del sistema.  
-
----
-
-## ✅ Conclusión
-
-En conjunto, estas prácticas permiten:  
-- Desarrollar código guiado por reglas de negocio (**TDD + BDD**).  
-- Escribir pruebas claras y mantenibles (**AAA**).  
-- Diseñar casos de prueba robustos que cubren diferentes escenarios (**clases de equivalencia y valores límite**).  
-
-Esto fortalece la **calidad del software**, mejora la **trazabilidad de los requisitos** y fomenta un desarrollo **iterativo y seguro**.
-
----
-
-# Recursos recomendados
-- *The Art of Software Testing* – Myers, 2011.  
-- *Testing Computer Software* – Kaner, 1999.  
-- *Effective Unit Testing* – Lasse Koskela, 2013.  
+## RED CMD
+![Alt text](https://github.com/Joel-109/Taller_TDD_DYAS/blob/main/img/RED.png)
+## Green
+![Alt text](https://github.com/Joel-109/Taller_TDD_DYAS/blob/main/img/GREEN_CODE.png)
+## Green CMD
+![Alt text](https://github.com/Joel-109/Taller_TDD_DYAS/blob/main/img/GREEN_CMD.png)
+## REFACTOR CMD
+![Alt text](https://github.com/Joel-109/Taller_TDD_DYAS/blob/main/img/REFACTOR_CODE.png)
+## REFACTOR CMD
+![Alt text](https://github.com/Joel-109/Taller_TDD_DYAS/blob/main/img/REFACTOR_CMD.png)
