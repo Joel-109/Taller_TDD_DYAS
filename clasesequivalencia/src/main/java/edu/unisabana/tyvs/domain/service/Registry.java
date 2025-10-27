@@ -44,7 +44,7 @@ public class Registry {
             }
         }
 
-        // Validación de Edad
+        // Validación de Edad.
         if (age < 0 || age > this.maxAge){
             return RegisterResult.INVALID_AGE;
         } else if (age >= 0 && age < this.minAge){
